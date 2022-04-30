@@ -4,7 +4,13 @@ const graphql = require("graphql");
 
 // GraphQL object
 
-const { GraphQLObjectType, GraphQLID, GraphQLString } = graphql;
+const {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLInt,
+  GraphQLSchema,
+} = graphql;
 
 // Define the schema
 // const schema = new graphql.GraphQLSchema({
@@ -32,6 +38,31 @@ const BookType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     genre: { type: GraphQLString },
+    author: {
+      // relationship/ref
+      type: AuthorType,
+      resolve(parent, args) {
+        // parent will contain all details of the book object
+        // return Author.findById(parent.authorId);
+      },
+    },
+  }),
+});
+// e.g query:
+
+// book(id:2){
+//     genre
+//     author{
+//         name
+//     }
+// }
+
+const AuthorType = new GraphQLObjectType({
+  name: "Author",
+  fields: () => ({
+    id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    age: { type: GraphQLInt },
   }),
 });
 
@@ -42,6 +73,20 @@ const RootQuery = new GraphQLObjectType({
     book: {
       type: BookType,
       args: { id: { type: GraphQLID } }, // like req.params/query
+      resolve(parent, args) {
+        // code to get data from db/other source or to perform some function on query hit
+        // args param will give us access to all the args passed in the query
+        // return find(args.id)
+      },
+    },
+    author: {
+      type: AuthorType,
+      args: { id: { type: GraphQLID } },
+      resolve(parent, args) {
+        // code to get data from db/other source or to perform some function on query hit
+        // args param will give us access to all the args passed in the query
+        // return find(args.id)
+      },
     },
   },
 });
@@ -49,6 +94,10 @@ const RootQuery = new GraphQLObjectType({
 // call from frontend with args e.g:
 
 // book(id:'xyz'){
-//     name,
+//     name
 //     genre
 // }
+
+module.exports = new GraphQLSchema({
+  query: RootQuery,
+});
